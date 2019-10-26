@@ -392,7 +392,9 @@ class Realization(object):
                 vecs += [token['deps_vec']] 
 
             token['vec'] = self.sum_b + self.sum_w * dy.concatenate(vecs)
-
+            # residual
+            if 'self' not in self.args.tree_vecs:
+                token['vec'] += token['self_vec']
 
         # only for inflection!
         if ('inf' in self.args.tasks or 'con' in self.args.tasks) and not self.args.no_seq:
@@ -928,7 +930,7 @@ if __name__ == '__main__':
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--beam_size", type=int, default=32)
     parser.add_argument("--features", default='lemma+upos+label+morph')
-    parser.add_argument("--tree_vecs", default='self+head+deps', help='combinations of: self, head, deps')
+    parser.add_argument("--tree_vecs", default='head+deps', help='combinations of: self, head, deps')
     parser.add_argument("--lin_decoders", default='h2d+l2r+r2l', help='combinations of: l2r, r2l, h2d')
     parser.add_argument("--pointer_type", default='glimpse', choices=['simple', 'glimpse', 'self'])
     parser.add_argument("--tree_lstm", default='att', choices=['simple', 'att', 'selfatt'])

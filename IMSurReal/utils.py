@@ -10,7 +10,6 @@ import nltk.translate.bleu_score as bs
 import Levenshtein
 from collections import defaultdict
 from copy import copy
-from tsp import *
 
 class ContractDecoder:
     def __init__(self, model, args, c2i, emb):
