@@ -30,7 +30,7 @@ Train a model for each task:
 * contract several tokens into one token (con)
 > 
 
-`python IMSurReal/main.py train -m [MODEL_FILE] -t [TRAIN_FILE] --d [DEV_FILE] --tasks {lin, gen, inf, con}`
+`python IMSurReal/main.py train -m [MODEL_FILE] -t [TRAIN_FILE] -d [DEV_FILE] --tasks {lin, gen, inf, con}`
 where `[TRAIN_FILE]` and `[DEV_FILE]` should be the output from `align.py`, i.e., annotated with the information about the original_id and removed tokens.
 
 Note that although it is possible to train several tasks in one model, e.g. use the flag `--tasks lin+inf` instead of `--tasks lin`, it generally performs worse than separated models, thus not recommended. 
@@ -40,7 +40,7 @@ Note that although it is possible to train several tasks in one model, e.g. use 
 There is no output file in eval mode, just the evaluation score (accuracy or BLEU score, depending on the task).
 
 ##### Prediction
-`python IMSurReal/main.py pred -m [MODEL_FILE] -i [INPUT_FILE] --p [PRED_FILE]`
+`python IMSurReal/main.py pred -m [MODEL_FILE] -i [INPUT_FILE] -p [PRED_FILE]`
 It outputs and prediction file, which could be used as the input file for the next step in the pipeline. The input file could be dev data or test data, where the alignment is not used.
 
 
