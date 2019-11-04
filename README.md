@@ -58,7 +58,8 @@ If you are using this system for research, we would appreciate if you cite one o
         author = "Xiang Yu and Agnieszka Falenska and Ngoc Thang Vu and Jonas Kuhn",
         booktitle = "Proceedings of the 12th International Conference on Natural Language Generation",
         year = "2019",
-        address={Tokyo, Japan},
+        address="Tokyo, Japan",
+        url="https://www.inlg2019.com/assets/papers/147_Paper.pdf"
     }
 
 * For the full pipeline and the results in both shallow and deep tracks of the SR'19 Shared Task:
@@ -68,5 +69,6 @@ If you are using this system for research, we would appreciate if you cite one o
         author = "Xiang Yu and Agnieszka Falenska and Marina Haid and Ngoc Thang Vu and Jonas Kuhn",
         booktitle = "Proceedings of the Second Workshop on Multilingual Surface Realization",
         year = "2019",
-        address={Hong Kong, China},
+        address="Hong Kong, China",
+        url="https://www.aclweb.org/anthology/D19-6306/"
     }    
