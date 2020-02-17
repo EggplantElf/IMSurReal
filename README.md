@@ -16,10 +16,10 @@ This step aligns the original UD treebank with the T1 and T2 training and develo
 Note: The information about the original id and removed tokens are not used by the model, it is just easier for training and evaluation.
 
 * Align the data for the shallow track (T1): 
-`python IMSurReal/align.py data/UD/en_lines-ud-train.conllu data/T1/en_lines-ud-train.conllu data/T1/en_lines-ud-train.gold.conllu`
+`python IMSurReal/align.py data/UD/en_partut-ud-train.conllu data/T1/en_partut-ud-train.conllu data/T1/en_partut-ud-train.gold.conllu`
 
 * Align the data for the deep track (T2): 
-`python IMSurReal/align.py data/UD/en_lines-ud-train.conllu data/T2/en_lines-ud-train_DEEP.conllu data/T2/en_lines-ud-train_DEEP.gold.conllu`
+`python IMSurReal/align.py data/UD/en_partut-ud-train.conllu data/T2/en_partut-ud-train_DEEP.conllu data/T2/en_partut-ud-train_DEEP.gold.conllu`
 
 
 ##### Training models
