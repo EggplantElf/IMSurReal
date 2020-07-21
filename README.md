@@ -7,6 +7,7 @@ IMS Surface Realization System for INLG2019 and SR'19 Shared Task, see (http://t
 * NumPy (`pip install numpy`)
 * Levinshtein (`pip install python-Levenshtein`)
 * mosestokenizer (`pip install mosestokenizer`)
+* NLTK (`pip install nltk`)
 
 #### Usage
 An example script containing all the commands is provided in `run_all.sh`, and the detailed usage is described as follows:
