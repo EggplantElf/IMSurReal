@@ -60,61 +60,51 @@ It outputs and prediction file, which could be used as the input file for the ne
 
 It creates the detokenized text output with Moses detokenizer for the human evaluation of the shared task.
   
-#### Citation
+## Citation
 
 If you are using this system for research, we would appreciate if you cite one of the follow papers:
 
 * For the linearization module and the (non-official) results in the shallow track of the SR'18 Shared Task data:
 >
-@inproceedings{yu-etal-2019-head,
-    title = "Head-First Linearization with Tree-Structured Representation",
-    author = "Yu, Xiang  and
-      Falenska, Agnieszka  and
-      Vu, Ngoc Thang  and
-      Kuhn, Jonas",
-    booktitle = "Proceedings of the 12th International Conference on Natural Language Generation",
-    month = oct # "{--}" # nov,
-    year = "2019",
-    address = "Tokyo, Japan",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/W19-8636",
-    doi = "10.18653/v1/W19-8636",
-    pages = "279--289"
-}
+    @inproceedings{yu-etal-2019-head,
+        title = "Head-First Linearization with Tree-Structured Representation",
+        author = "Yu, Xiang  and Falenska, Agnieszka  and Vu, Ngoc Thang  and Kuhn, Jonas",
+        booktitle = "Proceedings of the 12th International Conference on Natural Language Generation",
+        month = oct # "{--}" # nov,
+        year = "2019",
+        address = "Tokyo, Japan",
+        publisher = "Association for Computational Linguistics",
+        url = "https://www.aclweb.org/anthology/W19-8636",
+        doi = "10.18653/v1/W19-8636",
+        pages = "279--289"
+      }
   
 * For the full pipeline and the results in both shallow and deep tracks of the SR'19 Shared Task:
 >
-@inproceedings{yu-etal-2019-imsurreal,
-    title = "{IMS}ur{R}eal: {IMS} at the Surface Realization Shared Task 2019",
-    author = "Yu, Xiang  and
-      Falenska, Agnieszka  and
-      Haid, Marina  and
-      Vu, Ngoc Thang  and
-      Kuhn, Jonas",
-    booktitle = "Proceedings of the 2nd Workshop on Multilingual Surface Realisation (MSR 2019)",
-    month = nov,
-    year = "2019",
-    address = "Hong Kong, China",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/D19-6306",
-    doi = "10.18653/v1/D19-6306",
-    pages = "50--58"
-}
+    @inproceedings{yu-etal-2019-imsurreal,
+        title = "{IMS}ur{R}eal: {IMS} at the Surface Realization Shared Task 2019",
+        author = "Yu, Xiang  and Falenska, Agnieszka  and Haid, Marina  and Vu, Ngoc Thang  and Kuhn, Jonas",
+        booktitle = "Proceedings of the 2nd Workshop on Multilingual Surface Realisation (MSR 2019)",
+        month = nov,
+        year = "2019",
+        address = "Hong Kong, China",
+        publisher = "Association for Computational Linguistics",
+        url = "https://www.aclweb.org/anthology/D19-6306",
+        doi = "10.18653/v1/D19-6306",
+        pages = "50--58"
+    }
 
 * For the improved TSP-based linearization decoder and non-projective post processing (in v2.0):
 >
-@inproceedings{yu-etal-2020-fast,
-    title = "Fast and Accurate Non-Projective Dependency Tree Linearization",
-    author = "Yu, Xiang  and
-      Tannert, Simon  and
-      Vu, Ngoc Thang  and
-      Kuhn, Jonas",
-    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
-    month = jul,
-    year = "2020",
-    address = "Online",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/2020.acl-main.134",
-    doi = "10.18653/v1/2020.acl-main.134",
-    pages = "1451--1462"
-}
+    @inproceedings{yu-etal-2020-fast,
+        title = "Fast and Accurate Non-Projective Dependency Tree Linearization",
+        author = "Yu, Xiang  and Tannert, Simon  and Vu, Ngoc Thang  and Kuhn, Jonas",
+        booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+        month = jul,
+        year = "2020",
+        address = "Online",
+        publisher = "Association for Computational Linguistics",
+        url = "https://www.aclweb.org/anthology/2020.acl-main.134",
+        doi = "10.18653/v1/2020.acl-main.134",
+        pages = "1451--1462"
+    }
