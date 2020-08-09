@@ -38,26 +38,44 @@ def clip_all(model, low=-1, high=1):
     for p in model.parameter_list():
         p.clip_inplace(low, high)
 
+def leaky_relu(x):
+    return dy.bmax(.1*x, x)
+
+
+# class MLP(object):
+#     def __init__(self, model, di, dh, do):
+#         self.model = model
+#         self.bh = model.add_parameters(dh)
+#         self.wh = model.add_parameters((dh, di))
+#         self.bo = model.add_parameters(do)
+#         self.wo = model.add_parameters((do, dh))
+
+#     def forward(self, x):
+#         h = dy.affine_transform([self.bh, self.wh, x])
+#         o = dy.affine_transform([self.bo, self.wo, dy.tanh(h)])
+#         return o
 
 class MLP(object):
-    def __init__(self, model, di, dh, do):
+    def __init__(self, model, di, do, *dhs):
         self.model = model
-        self.bh = model.add_parameters(dh)
-        self.wh = model.add_parameters((dh, di))
-        self.bo = model.add_parameters(do)
-        self.wo = model.add_parameters((do, dh))
+        ds = [di] + list(dhs) + [do]
+        self.bs = [model.add_parameters(d) for d in ds[1:]]
+        self.ws = [model.add_parameters((j, i)) for i, j in zip(ds, ds[1:])]
+
 
     def forward(self, x):
-        h = dy.affine_transform([self.bh, self.wh, x])
-        o = dy.affine_transform([self.bo, self.wo, dy.tanh(h)])
-        return o
+        for i, (b, w) in enumerate(zip(self.bs, self.ws)):
+            if i:
+                x = leaky_relu(x)
+            x = dy.affine_transform([b, w, x])
+        return x
 
 class TreeLSTM(object):
     def __init__(self, model, dm, att_type):
         self.model = model 
         self.att_type = att_type
-        self.WS = [self.model.add_parameters((dm, dm)) for _ in "iouf"]
-        self.US = [self.model.add_parameters((dm, dm)) for _ in "iouf"]
+        self.WS = [self.model.add_parameters((dm, dm), init=orthonormal_initializer(dm, dm)) for _ in "iouf"]
+        self.US = [self.model.add_parameters((dm, dm), init=orthonormal_initializer(dm, dm)) for _ in "iouf"]
         self.BS = [self.model.add_parameters(dm) for _ in "iouf"]
 
         if self.att_type == 'att' or self.att_type == 'selfatt':
@@ -181,5 +199,65 @@ class SelfPointer:
         cand_mat_trans = dy.transpose(cand_mat)
         s = cand_mat_trans * (self.att_q * seq_vec)
         return s
+
+class BiaffineAttention:
+    def __init__(self, model, token_dim, hid_dim, self_attention=False):
+        self.mlp_fr = MLP(model, token_dim, hid_dim)
+        self.mlp_to = MLP(model, token_dim, hid_dim)
+        self.attention_fr = Attention(model, token_dim, token_dim) if self_attention else None
+        self.attention_to = Attention(model, token_dim, token_dim) if self_attention else None
+        self.biaffine = model.add_parameters((hid_dim+1, hid_dim+1), 
+                                # init=dy.ConstInitializer(0.))
+                                init=orthonormal_initializer(hid_dim+1, hid_dim+1))
+
+    def attend(self, fr_vecs, to_vecs):
+        fr_mat = dy.concatenate_cols(fr_vecs)
+        to_mat = dy.concatenate_cols(to_vecs)
+
+        if self.attention_fr:
+            fr_mat = self.attention_fr.encode(fr_mat)
+            to_mat = self.attention_to.encode(to_mat)
+
+        fr_mat = leaky_relu(self.mlp_fr.forward(fr_mat))
+        fr_mat = dy.concatenate([fr_mat, dy.inputTensor(np.ones((1, len(fr_vecs)), dtype=np.float32))])
+        to_mat = leaky_relu(self.mlp_to.forward(to_mat))
+        to_mat = dy.concatenate([to_mat, dy.inputTensor(np.ones((1, len(to_vecs)), dtype=np.float32))])
+        score_mat = dy.transpose(fr_mat) * self.biaffine * to_mat
+        return score_mat
+
+class BilinearAttention:
+    def __init__(self, model, token_dim, hid_dim):
+        self.mlp_fr = MLP(model, token_dim, hid_dim)
+        self.mlp_to = MLP(model, token_dim, hid_dim)
+        self.biaffine = model.add_parameters((hid_dim, hid_dim),
+                                # init=dy.ConstInitializer(0.))
+                                init=orthonormal_initializer(hid_dim, hid_dim))
+
+    def attend(self, fr_vecs, to_vecs):
+        fr_mat = dy.concatenate_cols(fr_vecs)
+        to_mat = dy.concatenate_cols(to_vecs)
+        score_mat = dy.transpose(leaky_relu(self.mlp_fr.forward(fr_mat))) * \
+                     self.biaffine * \
+                     leaky_relu(self.mlp_to.forward(to_mat))
+        return score_mat
+
+class PairAttention:
+    def __init__(self, model, token_dim, hid_dim):
+        self.mlp_fr = MLP(model, token_dim, hid_dim)
+        self.mlp_to = MLP(model, token_dim, hid_dim)
+        self.mlp_att = MLP(model, hid_dim*2, 1, hid_dim)
+
+    def attend(self, fr_vecs, to_vecs):
+        fr_vecs = [leaky_relu(self.mlp_fr.forward(f)) for f in fr_vecs]
+        to_vecs = [leaky_relu(self.mlp_to.forward(t)) for t in to_vecs]
+        score_mat = dy.concatenate_cols([dy.concatenate([self.mlp_att.forward(dy.concatenate([f, t]))
+                                                         for t in to_vecs])
+                                        for f in fr_vecs])
+        return score_mat
+
+
+
+
+
 
 

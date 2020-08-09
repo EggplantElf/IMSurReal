@@ -1,0 +1,11 @@
+*.mdl
+*.log
+*.conll
+*.gz
+*.pyc
+*.txt
+*.log
+*.out
+models
+scripts
+tmp

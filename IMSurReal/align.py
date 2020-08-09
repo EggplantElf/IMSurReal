@@ -65,6 +65,9 @@ def align(th, uh, relax=False, verbose=False):
 
 
 def mark(sent, pairs, missing):
+    # to avoid a bug in write_conllu
+    sent['input_tokens'] = []
+
     for t, u in pairs:
         if t['lin'] is not None:
             t['morph'].append(f'lin={t["lin"]:+d}')
@@ -89,7 +92,6 @@ def mark(sent, pairs, missing):
                         })
             sent.add_token(n)
 
-
 def align_sent(tsent, usent):
     ulemmas = set(u['lemma'] for u in usent.get_tokens())
     relax = any(t['lemma'] not in ulemmas for t in tsent.get_tokens())
@@ -106,7 +108,7 @@ def main(UD_file, in_file, out_file):
     udsents = read_conllu(UD_file, True)
     t2sents = read_conllu(in_file, False)
 
-    # print(len(udsents), len(t2sents))
+    print(len(udsents), len(t2sents))
 
     out_sents = []
 

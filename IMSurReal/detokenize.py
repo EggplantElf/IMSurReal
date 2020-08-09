@@ -1,12 +1,12 @@
 import sys
 from data import *
-from mosestokenizer import *
+from mosestokenizer import MosesDetokenizer
 
 
 def main(test_file, output_file, lang):
     lang = lang.split('_')[0]
+    # detokenizer = MosesDetokenizer(lang)
     detokenize = MosesDetokenizer(lang)
-
     sent_id = 1
     with open(output_file, 'w+') as out:
         for line in open(test_file):
