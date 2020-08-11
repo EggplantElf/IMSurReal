@@ -59,5 +59,5 @@ python IMSurReal/main.py pred  -m example/t2.inf.mdl -i example/t2.gen.conllu -p
 python IMSurReal/main.py pred  -m example/t2.con.mdl -i example/t2.inf.conllu -p example/t2.con.conllu
 
 # evaluate test prediction (BLEU score on tokenized text)
-python IMSurReal/evaluate.py data/UD/en_partut-ud-test.conllu example/t1.con.conllu
-python IMSurReal/evaluate.py data/UD/en_partut-ud-test.conllu example/t2.con.conllu
+python IMSurReal/evaluate.py data/UD/en_partut-ud-test.conllu example/t1.inf.conllu
+python IMSurReal/evaluate.py data/UD/en_partut-ud-test.conllu example/t2.inf.conllu
