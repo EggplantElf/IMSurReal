@@ -190,7 +190,8 @@ class GenDecoder(Decoder):
 
         self.encode(sent)
         for token in traverse_bottomup(sent.root):
-            seq = token[self.pred_input_key if pipeline else self.train_input_key]
+            # seq = token[self.pred_input_key if pipeline else self.train_input_key]
+            seq = token[self.train_input_key] or token[self.pred_input_key]
             res = self.decode(token, seq)
             token['generated_domain'] = res['seq']
 
