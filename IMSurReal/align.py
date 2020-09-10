@@ -108,20 +108,23 @@ def main(UD_file, in_file, out_file):
     udsents = read_conllu(UD_file, True)
     t2sents = read_conllu(in_file, False)
 
-    print(len(udsents), len(t2sents))
+    sent_id = 0
+    with open(out_file, 'w') as out:
+        for usent, tsent in zip(udsents, t2sents):
+            sent_id += 1
+            out_sent = align_sent(tsent, usent)
+            if out_sent:
+                line = ''
+                for t in out_sent.get_output_tokens():
+                    morphstr = '_' if t['morph'] == [] else \
+                            '|'.join(m for m in sorted(t['morph'], key=str.swapcase))
+                    line += f"{t['tid']}\t{t['oword']}\t{t['olemma']}\t{t['upos']}\t{t['xpos']}\t{morphstr}\t" \
+                                f"{t['hid']}\t{t['label']}\t{t['cword']}\t{t['original_id'] or '_'}\n" 
+                out.write(line + '\n')
+            else:
+                print(tsent)
 
-    out_sents = []
-
-    for usent, tsent in zip(udsents, t2sents):
-        out_sent = align_sent(tsent, usent)
-        if out_sent:
-            out_sents.append(out_sent)
-        else:
-            print(tsent)
-
-    print('# sents:', len(out_sents))
-    write_conllu(out_file, out_sents, False, False, False)
-
+    print(f'aligned {sent_id} sentences')
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

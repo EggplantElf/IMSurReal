@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import repeat
+from itertools import repeat, cycle
 import random
 import re
 import lzma
@@ -104,7 +104,7 @@ class Sentence(dict):
         for key in ['linearized', 'sorted', 'generated', 'inflected', 'contracted', 'nbest_linearized']:
             self[f'{key}_tokens'] = []
         for token in self.tokens:
-            del token.vecs
+            # del token.vecs
             token.vecs = {}
 
 
@@ -216,6 +216,16 @@ class Sentence(dict):
                 self.is_projective = False
         return self.is_projective
 
+    def convert_lemma_morph(self):
+        # convert korean 
+        for t in self.get_tokens(False):
+            t['clemma'] = t['lemma'] # used for the characters in inflection
+            stem = t['lemma'].split('+')[0]
+            if stem:
+                t['lemma'] = stem # use as feature
+            xmorph = t['xpos'].split('+')
+            t['morph'] += xmorph
+
 
 def normalize(word):
     # special repr for words with a number in it, following Schmaltz
@@ -226,8 +236,8 @@ def normalize(word):
 
 
 # default read non-ud format as input, which means lemma and word are swapped 
-def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, first = None):
-    sents = []
+def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, convert_lemma=False, simple=False, first=None):
+    count = 0
     sent = Sentence()
     for line in lzma.open(filename, "rt", encoding='utf-8') if filename.endswith('xz') else open(filename):
     # for line in open(filename):
@@ -246,10 +256,6 @@ def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, first = Non
                     # separate morphological information from task related information
                     lin = None          # used in both T1 and T2 to indicate the relative position to its head, 
                                         # appear in train and dev, positive means after the head
-                    # original_id = int(entries[0])  # used in both T1 and T2 to indicate the original tid in UD, 
-                    # original_id = None  # used in both T1 and T2 to indicate the original tid in UD, 
-                                        # only in train and dev set
-                    # original_id = int(entries[0]) if ud else None
                     original_id = int(entries[0])
                     ids = []            # used in T2 to indicate all corresponding tokens (head and deleted children) in T1,
                                         # only in train set
@@ -309,12 +315,15 @@ def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, first = Non
                     else:
                         sent.add_token(token)
         elif len(sent.tokens) > 1:
-            sent.complete()
-            sents.append(sent)
+            if convert_lemma:
+                sent.convert_lemma_morph()
+            if not simple:
+                sent.complete()
+            count += 1
+            yield sent
             sent = Sentence()
-            if first and len(sents) >= first:
+            if first and count >= first:
                 break
-    return sents
 
 # default write ud format as output
 def write_conllu(filename, sents, ud=True, use_morphstr=False, header=True):
@@ -373,6 +382,15 @@ def write_nbest(filename, sents, key='lemma'):
             out.write(line)
 
 
+def iterate_batch(sents, size):
+    endless_sents = cycle(sents)
+    batch = []
+    while True:
+        for _ in range(size):
+            batch.append(next(endless_sents))
+        random.shuffle(batch)
+        yield batch
+        batch = []
 
 
 def iterate(sents):
@@ -402,6 +420,6 @@ def flatten(token, key='linearized_domain'):
 
 if __name__ == '__main__':
     # simple test 
-    sents = read_conllu('data/T1-dev/es_gsd-ud-dev.conllu')
+    sents = list(read_conllu('data/T1-dev/es_gsd-ud-dev.conllu'))
     # sents = read_conllu('data/T2-dev/es_gsd-ud-dev_DEEP.conllu')
     write_conllu('tmp/pred/es_gsd-ud-dev.conllu', sents)

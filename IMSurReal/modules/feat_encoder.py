@@ -49,10 +49,12 @@ class FeatEncoder(Encoder):
             self.xpos_map = pickle.load(stream)
             self.label_map = pickle.load(stream)
             self.lost_map = pickle.load(stream)
+            self.inf_rules = pickle.load(stream)
 
 
 
     def get_maps(self, sents):
+        self.args.num_train_sents = 0
         print('get maps')
         self.char_map = {'<#c?>': 0, '<$>': 1}
         self.word_map = {'<#w?>': 0, '<#W?>': 1}
@@ -73,8 +75,13 @@ class FeatEncoder(Encoder):
         self.lost_freq = defaultdict(int)
         self.upos2sigs = defaultdict(set)
 
+        # for extracting inflection dictionary
+        inf_freq = defaultdict(lambda: defaultdict(int))
+        self.inf_rules = {}
+
         # count the frequency of each feature
         for sent in sents:
+            self.args.num_train_sents += 1
             for token in sent.get_tokens():
                 for c in token['word'] + token['lemma']:
                     self.char_freq[c] += 1
@@ -93,11 +100,24 @@ class FeatEncoder(Encoder):
                 self.xpos_freq[token['xpos']] += 1
                 self.label_freq[token['label']] += 1
                 token['diff'] = get_edit_diff(token['clemma'], token['word'])
+                if 'inf' in self.args.tasks:
+                    inf_freq[f"{token['clemma']}-{token['upos']}-({'|'.join(token['morph'])})"][token['word']] += 1
 
             # extract lost tokens for T2
             for token in sent.lost:
                 self.lost_freq[signature(token)] += 1
                 self.upos2sigs[token['upos']].add(signature(token))
+
+        # extract inflection rules
+        if 'inf' in self.args.tasks:
+            min_freq = 5
+            min_certainty = 0.99
+            for k, v in sorted(inf_freq.items(), key=lambda x: -sum(x[1].values())):
+                if sum(v.values()) > min_freq:
+                    w, c = max(v.items(), key=lambda x:x[1])
+                    if c > sum(v.values()) * min_certainty: 
+                        self.inf_rules[k] = w
+            self.log(f'total inflection rules: {len(self.inf_rules)}')
 
         self.log(f'LEMMA={len(self.lemma_freq)}') # count lemma before limit
         # limit the vocabulary
@@ -167,6 +187,7 @@ class FeatEncoder(Encoder):
             pickle.dump(self.xpos_map, stream, -1)
             pickle.dump(self.label_map, stream, -1)
             pickle.dump(self.lost_map, stream, -1)
+            pickle.dump(self.inf_rules, stream, -1)
 
 
 

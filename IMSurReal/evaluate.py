@@ -5,8 +5,8 @@ import nltk.translate.bleu_score as bs
 
 
 def main(gold_file, pred_file, gkey='word', pkey='word'):
-    gold_sents = read_conllu(gold_file, True, False) # Read UD format, (id, word, lemma, ...) 
-    pred_sents = read_conllu(pred_file, False, False) # SRST format (id, lemma, word, ...)
+    gold_sents = list(read_conllu(gold_file, ud=True, skip_lost=False, simple=True)) # Read UD format, (id, word, lemma, ...) 
+    pred_sents = list(read_conllu(pred_file, ud=False, skip_lost=False, simple=True)) # SRST format (id, lemma, word, ...)
 
     all_ref = [ [[t[gkey].lower() for t in sent.get_tokens()]] for sent in gold_sents]
     all_hyp = [ [t[pkey].lower() for t in sent.get_tokens()] for sent in pred_sents]

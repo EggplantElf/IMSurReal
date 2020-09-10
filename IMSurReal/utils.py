@@ -141,16 +141,6 @@ def text_bleu(gold_txts, pred_txts):
     bleu = bs.corpus_bleu(all_ref, all_hyp, smoothing_function=chencherry.method2)
     return bleu
 
-def convert_lemma_morph(sents):
-    # convert korean 
-    for sent in sents:
-        for t in sent['input_tokens']:
-            t['clemma'] = t['lemma'] # used for the characters in inflection
-            stem = t['lemma'].split('+')[0]
-            if stem:
-                t['lemma'] = stem # use as feature
-            xmorph = t['xpos'].split('+')
-            t['morph'] += xmorph
 
 def capitalize(tokens, ignore_lemma_case=False):
     for t in tokens:

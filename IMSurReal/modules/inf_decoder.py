@@ -10,7 +10,7 @@ from modules.bag_encoder import BagEncoder
 from modules.tree_encoder import TreeEncoder
 
 class InfDecoder(Decoder):
-    def __init__(self, args, model, c2i, emb, train_sents=None, dev_sents=None):
+    def __init__(self, args, model, c2i, emb, inf_rules, dev_sents):
         super().__init__(args, model)
         self.pred_key = 'token-oword' # identify the prediction
 
@@ -51,12 +51,9 @@ class InfDecoder(Decoder):
 
         self.log(f'Initialized <{self.__class__.__name__}>, params = {self.model.parameter_count()}')
         self.inf_rules = {}
-        if not self.args.no_inf_rules:
-            if self.args.mode == 'train':
-                self.extract_rules(train_sents, 5, 0.99)
-                self.eval_rules(dev_sents)
-            else:
-                self.load_rules()
+        if self.args.no_inf_rules:
+            self.inf_rules = inf_rules 
+            self.eval_rules(dev_sents)
 
     def encode(self, sent):
         # encode
@@ -212,26 +209,26 @@ class InfDecoder(Decoder):
     #     return eval_all(gold_seqs, pred_seqs, 'word', 'oword')
 
 
-    def extract_rules(self, sents, min_freq=1, min_certainty=0.99):
-        freq = defaultdict(lambda: defaultdict(int))
-        for sent in sents:
-            for t in sent[self.train_input_key]:
-                freq[f"{t['clemma']}-{t['upos']}-({'|'.join(t['morph'])})"][t['word']] += 1
+    # def extract_rules(self, sents, min_freq=1, min_certainty=0.99):
+    #     freq = defaultdict(lambda: defaultdict(int))
+    #     for sent in sents:
+    #         for t in sent[self.train_input_key]:
+    #             freq[f"{t['clemma']}-{t['upos']}-({'|'.join(t['morph'])})"][t['word']] += 1
 
-        for k, v in sorted(freq.items(), key=lambda x: -sum(x[1].values())):
-            if sum(v.values()) > min_freq:
-                w, c = max(v.items(), key=lambda x:x[1])
-                if c > sum(v.values()) * min_certainty: 
-                    self.inf_rules[k] = w
+    #     for k, v in sorted(freq.items(), key=lambda x: -sum(x[1].values())):
+    #         if sum(v.values()) > min_freq:
+    #             w, c = max(v.items(), key=lambda x:x[1])
+    #             if c > sum(v.values()) * min_certainty: 
+    #                 self.inf_rules[k] = w
 
-        self.log(f'total inflection rules: {len(self.inf_rules)}')
-        with gzip.open(self.args.model_file+'.lex.gz', 'wb') as stream:
-            pickle.dump(self.inf_rules, stream, -1)
+    #     self.log(f'total inflection rules: {len(self.inf_rules)}')
+    #     with gzip.open(self.args.model_file+'.lex.gz', 'wb') as stream:
+    #         pickle.dump(self.inf_rules, stream, -1)
 
 
-    def load_rules(self):
-        with gzip.open(self.args.model_file+'.lex.gz','rb') as stream:
-            self.inf_rules = pickle.load(stream)
+    # def load_rules(self):
+    #     with gzip.open(self.args.model_file+'.lex.gz','rb') as stream:
+    #         self.inf_rules = pickle.load(stream)
 
     def eval_rules(self, sents):
         total = covered = correct = equal = 0
