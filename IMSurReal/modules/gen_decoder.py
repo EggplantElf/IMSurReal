@@ -75,12 +75,11 @@ class GenDecoder(Decoder):
         lseq = seq[:hidx+1][::-1] + [bt] # h, l1, l2, ..., begin
         rseq = seq[hidx:] + [et] # h, r1, r2, ..., end
 
-        # for t in lseq:
-            # print(t.items())
-            # print(t['feat'])
+        # from left backwards (begin to head)
         lb_vecs = self.lb_lstm.initial_state().transduce([tk.vecs[self.vec_key] for tk in reversed(lseq)])
         for tk, lb_vec in zip(reversed(lseq), lb_vecs):
             tk.vecs['lb'] = lb_vec
+        # from right backwards (end to head)
         rb_vecs = self.rb_lstm.initial_state().transduce([tk.vecs[self.vec_key] for tk in reversed(rseq)])
         for tk, rb_vec in zip(reversed(rseq), rb_vecs):
             tk.vecs['rb'] = rb_vec
@@ -90,8 +89,8 @@ class GenDecoder(Decoder):
         lf_state = self.lf_lstm.initial_state().add_input(rseq[1].vecs['rb'])
         i = 0
         fk = lseq[0]
+        num_gen = 0
         while i < len(lseq)-1: 
-            num_gen = 0
             bk = lseq[i+1]
             lf_state = lf_state.add_input(fk.vecs[self.vec_key])
             lf_vec = lf_state.output()
@@ -136,8 +135,8 @@ class GenDecoder(Decoder):
         rf_state = self.rf_lstm.initial_state().add_input(lseq[1].vecs['lb'])
         i = 0
         fk = rseq[0]
+        num_gen = 0
         while i < len(rseq)-1: 
-            num_gen = 0
             bk = rseq[i+1]
             rf_state = rf_state.add_input(fk.vecs[self.vec_key])
             rf_vec = rf_state.output()
@@ -201,7 +200,6 @@ class GenDecoder(Decoder):
     def train_one_step(self, sent):
         total = correct = loss = 0
         t0 = time()
-        errs = []
 
         self.encode(sent)
         for token in traverse_bottomup(sent.root):
