@@ -119,7 +119,7 @@ def main(UD_file, in_file, out_file, scramble=False):
                 line = f'# sent_id = {sent_id}\n'
                 sorted_tokens = sorted(out_sent.tokens[1:], key=lambda x: x['original_id'])
                 line += '# lemmata = ' + ' '.join([t['lemma'] for t in sorted_tokens]) + '\n'
-                line += '# words = ' + ' '.join([t['word'] for t in sorted_tokens]) + '\n'
+                # line += '# words = ' + ' '.join([t['word'] for t in sorted_tokens]) + '\n'
                 for t in out_sent.get_output_tokens():
                     morphstr = '_' if t['morph'] == [] else \
                             '|'.join(m for m in sorted(t['morph'], key=str.swapcase))
