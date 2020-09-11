@@ -51,7 +51,7 @@ class InfDecoder(Decoder):
 
         self.log(f'Initialized <{self.__class__.__name__}>, params = {self.model.parameter_count()}')
         self.inf_rules = {}
-        if self.args.no_inf_rules:
+        if not self.args.no_inf_rules:
             self.inf_rules = inf_rules 
             self.eval_rules(dev_sents)
 

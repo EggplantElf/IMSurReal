@@ -3,6 +3,7 @@ from itertools import repeat, cycle
 import random
 import re
 import lzma
+import Levenshtein
 
 class Token(dict):
     def __init__(self, entries):
@@ -23,6 +24,18 @@ class Token(dict):
 
     def not_empty(self):
         return self['lemma'] != '_' or self['upos'] != 'PRON'
+
+    def convert_lemma_morph(self):
+        # convert korean 
+        self['clemma'] = self['lemma'] # used for the characters in inflection
+        stem = self['lemma'].split('+')[0]
+        if stem:
+            self['lemma'] = stem # use as feature
+        xmorph = self['xpos'].split('+')
+        self['morph'] += xmorph
+
+    def get_diff(self):
+        self['diff'] = get_edit_diff(self['clemma'], self['word'])
 
 class Root(Token):
     def __init__(self, entries):
@@ -216,15 +229,7 @@ class Sentence(dict):
                 self.is_projective = False
         return self.is_projective
 
-    def convert_lemma_morph(self):
-        # convert korean 
-        for t in self.get_tokens(False):
-            t['clemma'] = t['lemma'] # used for the characters in inflection
-            stem = t['lemma'].split('+')[0]
-            if stem:
-                t['lemma'] = stem # use as feature
-            xmorph = t['xpos'].split('+')
-            t['morph'] += xmorph
+
 
 
 def normalize(word):
@@ -309,14 +314,15 @@ def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, convert_lem
                                   'phead': None, # for parser prediction
                                   'phid': None # for parser prediction
                                    })
+                    if convert_lemma:
+                        token.convert_lemma_morph()
+                    token.get_diff()
                     if token['label'] == '<LOST>' and skip_lost:
                         sent.lost.append(token)
                     # elif token['lemma'] != '_': # ignore empty nodes
                     else:
                         sent.add_token(token)
         elif len(sent.tokens) > 1:
-            if convert_lemma:
-                sent.convert_lemma_morph()
             if not simple:
                 sent.complete()
             count += 1
@@ -417,6 +423,52 @@ def flatten(token, key='linearized_domain'):
         return sum([(flatten(tk, key) if (tk is not token) else ([tk] if token['tid'] != 0 and token.not_empty() else [])) \
                  for tk in token[key]], [])
 
+def get_edit_diff(lemma, word):
+    lemma, word = lemma.lower(), word.lower()
+    if lemma == word:
+        return '='
+    diff = ''
+    prev = ''
+    for (tp, bl, el, bw, ew) in Levenshtein.opcodes(lemma, word):
+        # print(tp, bl, el, bw, ew)
+        if tp == 'equal':
+            diff += '✓' * (el-bl)
+        elif tp == 'delete':
+            diff += '✗' * (el-bl)
+        elif tp == 'insert':
+            diff += word[bw:ew]
+        elif tp == 'replace':
+            if prev == 'delete':
+                # diff += lemma[bl:el]
+                diff += '✗' * (el-bl)
+                diff += word[bw:ew]
+            elif prev == 'insert':
+                diff += word[bw:ew]
+                diff += '✗' * (el-bl)
+            # either prev == equal or no prev
+            else:
+                diff += '✗' * (el-bl)
+                diff += word[bw:ew]
+        prev = tp
+    return diff
+
+def get_word_from_edit_diff(lemma, diff):
+    try:
+        if diff == '=':
+            return lemma
+        word = ''
+        i = 0
+        for d in diff:
+            if d == '✗':
+                i += 1
+            elif d == '✓':
+                word += lemma[i]
+                i += 1
+            else:
+                word += d
+        return word
+    except:
+        return lemma
 
 if __name__ == '__main__':
     # simple test 

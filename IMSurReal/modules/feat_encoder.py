@@ -99,7 +99,7 @@ class FeatEncoder(Encoder):
 
                 self.xpos_freq[token['xpos']] += 1
                 self.label_freq[token['label']] += 1
-                token['diff'] = get_edit_diff(token['clemma'], token['word'])
+                # token['diff'] = get_edit_diff(token['clemma'], token['word'])
                 if 'inf' in self.args.tasks:
                     inf_freq[f"{token['clemma']}-{token['upos']}-({'|'.join(token['morph'])})"][token['word']] += 1
 

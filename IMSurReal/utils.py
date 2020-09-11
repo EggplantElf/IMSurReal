@@ -4,7 +4,6 @@ from data import Token, flatten
 import dynet as dy
 import numpy as np
 import nltk.translate.bleu_score as bs
-import Levenshtein
 import gzip, pickle
 from copy import copy
 
@@ -71,54 +70,6 @@ def traverse_bottomup(h, pred=False):
             yield from traverse_bottomup(d, pred)
     yield h
 
-
-def get_edit_diff(lemma, word):
-    lemma, word = lemma.lower(), word.lower()
-    if lemma == word:
-        return '='
-    diff = ''
-    prev = ''
-    for (tp, bl, el, bw, ew) in Levenshtein.opcodes(lemma, word):
-        # print(tp, bl, el, bw, ew)
-        if tp == 'equal':
-            diff += '✓' * (el-bl)
-        elif tp == 'delete':
-            diff += '✗' * (el-bl)
-        elif tp == 'insert':
-            diff += word[bw:ew]
-        elif tp == 'replace':
-            if prev == 'delete':
-                # diff += lemma[bl:el]
-                diff += '✗' * (el-bl)
-                diff += word[bw:ew]
-            elif prev == 'insert':
-                diff += word[bw:ew]
-                diff += '✗' * (el-bl)
-            # either prev == equal or no prev
-            else:
-                diff += '✗' * (el-bl)
-                diff += word[bw:ew]
-        prev = tp
-    return diff
-
-
-def get_word_from_edit_diff(lemma, diff):
-    try:
-        if diff == '=':
-            return lemma
-        word = ''
-        i = 0
-        for d in diff:
-            if d == '✗':
-                i += 1
-            elif d == '✓':
-                word += lemma[i]
-                i += 1
-            else:
-                word += d
-        return word
-    except:
-        return lemma
 
 def sent_bleu(gold_seq, pred_seq, gkey='lemma', pkey='lemma'):
     chencherry = bs.SmoothingFunction()

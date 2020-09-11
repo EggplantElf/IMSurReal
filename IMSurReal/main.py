@@ -44,6 +44,7 @@ class Realization(object):
             # generator for real training data
             self.train_sents = read_conllu(self.args.train_file, self.args.ud_train, skip_lost, self.args.orig_word, 
                                             self.args.lemmatize, False, self.args.first_train)
+            self.iterate_batch = iterate_batch(self.train_sents, self.args.eval_every)
 
             # self.extra_sents = read_conllu(self.args.extra_file, True, skip_lost, self.args.orig_word, self.args.first_extra) if self.args.extra_file else []\
 
@@ -183,7 +184,7 @@ class Realization(object):
         best_score = -1
         step = 0
 
-        for batch in iterate_batch(self.train_sents, self.args.eval_every):
+        for batch in self.iterate_batch:
             # train on a batch of sentences
             t0 = time()
             for sent in tqdm(batch):
@@ -296,7 +297,7 @@ class Realization(object):
             waited = 0
             step = 0
 
-            for batch in iterate_batch(self.train_sents, self.args.eval_every):
+            for batch in self.iterate_batch:
                 loss = total = correct = 0
 
                 if switch_trainer:
