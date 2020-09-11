@@ -123,7 +123,7 @@ def main(UD_file, in_file, out_file, scramble=False):
                 for t in out_sent.get_output_tokens():
                     morphstr = '_' if t['morph'] == [] else \
                             '|'.join(m for m in sorted(t['morph'], key=str.swapcase))
-                    line += f"{t['tid']}\t{t['oword']}\t{t['olemma']}\t{t['upos']}\t{t['xpos']}\t{morphstr}\t" \
+                    line += f"{t['tid']}\t{t['olemma']}\t{t['oword']}\t{t['upos']}\t{t['xpos']}\t{morphstr}\t" \
                                 f"{t['hid']}\t{t['label']}\t{t['cword']}\t{t['original_id'] or '_'}\n" 
                 out_sents.append(line + '\n')
             else:
