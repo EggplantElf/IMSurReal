@@ -1,6 +1,7 @@
 import sys
 sys.path.append(".")
 from data import *
+import random
 import Levenshtein
 
 
@@ -103,28 +104,39 @@ def align_sent(tsent, usent):
                 return tsent
 
 
-def main(UD_file, in_file, out_file):
+def main(UD_file, in_file, out_file, scramble=False):
     print(UD_file)
     udsents = read_conllu(UD_file, True)
     t2sents = read_conllu(in_file, False)
 
     sent_id = 0
     with open(out_file, 'w') as out:
+        out_sents = []
         for usent, tsent in zip(udsents, t2sents):
             sent_id += 1
             out_sent = align_sent(tsent, usent)
             if out_sent:
-                line = ''
+                line = f'# sent_id = {sent_id}\n'
+                sorted_tokens = sorted(out_sent.tokens[1:], key=lambda x: x['original_id'])
+                line += '# lemmata = ' + ' '.join([t['lemma'] for t in sorted_tokens]) + '\n'
+                line += '# words = ' + ' '.join([t['word'] for t in sorted_tokens]) + '\n'
                 for t in out_sent.get_output_tokens():
                     morphstr = '_' if t['morph'] == [] else \
                             '|'.join(m for m in sorted(t['morph'], key=str.swapcase))
                     line += f"{t['tid']}\t{t['oword']}\t{t['olemma']}\t{t['upos']}\t{t['xpos']}\t{morphstr}\t" \
                                 f"{t['hid']}\t{t['label']}\t{t['cword']}\t{t['original_id'] or '_'}\n" 
-                out.write(line + '\n')
+                out_sents.append(line + '\n')
             else:
                 print(tsent)
+    
+        if scramble:
+            random.shuffle(out_sents)
+
+        for sent in out_sents:
+            out.write(sent)
 
     print(f'aligned {sent_id} sentences')
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    scramble = (len(sys.argv) > 4 and sys.argv[4] == 'scramble')
+    main(sys.argv[1], sys.argv[2], sys.argv[3], scramble)
