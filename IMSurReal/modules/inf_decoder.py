@@ -53,7 +53,8 @@ class InfDecoder(Decoder):
         self.inf_rules = {}
         if not self.args.no_inf_rules:
             self.inf_rules = inf_rules 
-            self.eval_rules(dev_sents)
+            if dev_sents:
+                self.eval_rules(dev_sents)
 
     def encode(self, sent):
         # encode
@@ -99,7 +100,7 @@ class InfDecoder(Decoder):
 
                     if train_mode:
                         y = 0 if (t['word'] == t['clemma']) else \
-                           (1 if i >= len(t['diff']) else self.e2i[t['diff'][i]])
+                           (1 if i >= len(t['diff']) else self.e2i.get(t['diff'][i], 4)) # unknown character
                         # avoid instability 
                         err = dy.pickneglogsoftmax(logit, y)
                         errs.append(err)
