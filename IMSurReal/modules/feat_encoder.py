@@ -230,6 +230,7 @@ class FeatEncoder(Encoder):
                 morph_vec = self.morph_lstm_encoder.initial_state().transduce(morph_input)[-1]
                 vecs.append(morph_vec)
             # token.vecs['feat'] = dy.concatenate(vecs)
-            token.vecs['feat'] = sum(vecs)
+            # token.vecs['feat'] = sum(vecs)
+            token.vecs['feat'] = dy.dropout(sum(vecs), self.args.dropout) if train_mode else sum(vecs)
 
 

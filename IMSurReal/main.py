@@ -407,11 +407,13 @@ if __name__ == '__main__':
     parser.add_argument("--hid_dim", type=int, default=128)
     parser.add_argument("--max_step", type=int, default=1000000)
     parser.add_argument("--eval_every", type=int, default=2000)
-    parser.add_argument("--patience", type=int, default=5)
+    parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--features", default='lemma+upos+label+morph')
     parser.add_argument("--pointer_type", default='glimpse', choices=['simple', 'glimpse', 'self'])
     parser.add_argument("--tree_lstm", default='simple', choices=['simple', 'att', 'selfatt'])
     parser.add_argument("--head_input", default='deps_vec', choices=['vec', 'deps_vec', 'deps_mem'])
+    parser.add_argument("--dropout", type=float, default=0)
+    
 
     # beam linearizer
     parser.add_argument("--beam_size", type=int, default=16)
@@ -428,7 +430,7 @@ if __name__ == '__main__':
     # parser.add_argument("--no_seq", action='store_true')
     parser.add_argument("--no_lin_constraint", action='store_true')
     parser.add_argument("--sent_tsp", action='store_true')
-    parser.add_argument("--max_vocab", type=int, default=100000)
+    parser.add_argument("--max_vocab", type=int, default=50000)
     # parser.add_argument("--extra_ratio", type=int, default=1)
     parser.add_argument("--first_train", type=int, default=1000000)
     parser.add_argument("--first_extra", type=int, default=1000000)
