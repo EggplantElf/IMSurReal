@@ -218,7 +218,7 @@ class FeatEncoder(Encoder):
             if 'label' in self.args.features:
                 vecs.append(self.label_emb[self.label_map.get(token['label'], 0)])
             if 'char_lstm' in self.args.features:
-                char_vecs = [self.char_emb[self.char_map.get(c, 0)] for c in token['lemma']]
+                char_vecs = [self.char_emb[self.char_map.get(c, 0)] for c in token['clemma']]
                 f_vecs = self.char_lstm_f_encoder.initial_state().transduce(char_vecs)
                 b_vecs = self.char_lstm_b_encoder.initial_state().transduce(reversed(char_vecs))
                 char_vec = dy.concatenate([f_vecs[-1], b_vecs[-1]])

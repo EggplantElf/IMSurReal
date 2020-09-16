@@ -15,7 +15,7 @@ def main(gold_file, pred_file, gkey='word', pkey='word'):
     chencherry = bs.SmoothingFunction()
     bleu = bs.corpus_bleu(all_ref, all_hyp, smoothing_function=chencherry.method2)
     exact = sum(r[0] == h for r, h in zip(all_ref, all_hyp)) / len(all_ref)
-    print(f'eval: bleu={bleu:.4f}, exact={exact:.4f}')
+    print(f'{gkey}: bleu={bleu:.4f}, exact={exact:.4f}')
     # print(f'{100*bleu:.2f}')
 
 
