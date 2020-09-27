@@ -2,6 +2,19 @@ import sys
 from data import read_conllu, write_conllu, iterate
 import nltk.translate.bleu_score as bs
 
+def read_txt(filename):
+    sents = []
+    for line in open(filename):
+        if line.startswith(u'# text') or line.startswith(u'#text'):
+            split = line.split(u'text = ')
+            if len(split) > 1:
+                text = split[1]
+            else:
+                #text = '# #'
+                text = ''
+            sents.append(text.lower().split())
+    return sents
+
 
 
 def main(gold_file, pred_file, gkey='word', pkey='word'):
@@ -11,12 +24,19 @@ def main(gold_file, pred_file, gkey='word', pkey='word'):
     all_ref = [ [[t[gkey].lower() for t in sent.get_tokens()]] for sent in gold_sents]
     all_hyp = [ [t[pkey].lower() for t in sent.get_tokens()] for sent in pred_sents]
 
+    # fallback to text input
+    if not all_ref:
+        all_ref = [[s] for s in read_txt(gold_file)]
+    if not all_hyp:
+        all_hyp = read_txt(pred_file)
+
+    # print(len(all_ref), len(all_hyp))
 
     chencherry = bs.SmoothingFunction()
     bleu = bs.corpus_bleu(all_ref, all_hyp, smoothing_function=chencherry.method2)
     exact = sum(r[0] == h for r, h in zip(all_ref, all_hyp)) / len(all_ref)
-    print(f'{gkey}: bleu={bleu:.4f}, exact={exact:.4f}')
-    # print(f'{100*bleu:.2f}')
+    # print(f'{gkey}: bleu={bleu:.4f}, exact={exact:.4f}')
+    print(f'{100*bleu:.2f}')
 
 
 
