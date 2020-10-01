@@ -119,6 +119,8 @@ class Sentence(dict):
         for token in self.tokens:
             # del token.vecs
             token.vecs = {}
+            token['linearized_domain'] = []
+            token['generated_domain'] = []
 
 
     def get_tokens(self, include_empty = True):
@@ -229,7 +231,8 @@ class Sentence(dict):
                 self.is_projective = False
         return self.is_projective
 
-
+    def get_size(self):
+        return total_size(self, verbose=False)
 
 
 def normalize(word):
@@ -388,12 +391,27 @@ def write_nbest(filename, sents, key='lemma'):
             out.write(line)
 
 
-def iterate_batch(sents, size):
-    endless_sents = cycle(sents)
+# def iterate_batch(sents, size):
+#     endless_sents = cycle(sents)
+#     batch = []
+#     while True:
+#         for _ in range(size):
+#             batch.append(next(endless_sents))
+#         random.shuffle(batch)
+#         yield batch
+#         batch = []
+
+def iterate_batch(train_sents, extra_sents, size, ratio):
+    tg = iterate(train_sents)
+    eg = iterate(extra_sents)
+    
     batch = []
     while True:
-        for _ in range(size):
-            batch.append(next(endless_sents))
+        for i in range(size):
+            if i % (ratio + 1) == 0 or not extra_sents:
+                batch.append(next(tg))
+            else:
+                batch.append(next(eg))
         random.shuffle(batch)
         yield batch
         batch = []

@@ -38,19 +38,10 @@ class Realization(object):
 
             skip_lost = ('inf' not in  self.args.tasks and 'con' not in self.args.tasks)
 
-            # generator for simplified training data, only for extracting maps
-            self.simple_train_sents = read_conllu(self.args.train_file, self.args.ud_train, skip_lost, self.args.orig_word, 
-                                            self.args.lemmatize, True, self.args.first_train)
             # generator for real training data
-            self.train_sents = read_conllu(self.args.train_file, self.args.ud_train, skip_lost, self.args.orig_word, 
-                                            self.args.lemmatize, False, self.args.first_train)
-            self.iterate_batch = iterate_batch(self.train_sents, self.args.eval_every)
-
-            # self.extra_sents = read_conllu(self.args.extra_file, True, skip_lost, self.args.orig_word, self.args.first_extra) if self.args.extra_file else []\
-
-            # To save memory, do not keep all the training senteces, but iterate through them
-            # First, fast iterate through training sentences to extract the features
-            # Later iterate again for training
+            self.train_sents = list(read_conllu(self.args.train_file, False, skip_lost, self.args.orig_word, self.args.lemmatize, False, self.args.first_train))
+            self.extra_sents = list(read_conllu(self.args.extra_file, False, skip_lost, self.args.orig_word, self.args.lemmatize, False, self.args.first_extra)) \
+                                    if self.args.extra_file else []
 
             self.dev_sents = list(read_conllu(self.args.dev_file, self.args.ud_dev, skip_lost, self.args.orig_word, self.args.lemmatize))
             self.test_sents = list(read_conllu(self.args.input_file, self.args.ud_test, skip_lost, self.args.orig_word, self.args.lemmatize)) if self.args.input_file else []
@@ -58,7 +49,7 @@ class Realization(object):
             # initialize feat_encoder here, because we need look up features in the data
             # iterate through the training data once
             t0 = time()
-            self.encoders['feat'] = FeatEncoder(self.args, self.model, self.simple_train_sents)
+            self.encoders['feat'] = FeatEncoder(self.args, self.model, self.train_sents+self.extra_sents)
             self.log(f'Time used for creating map: {(time()-t0):.1f}s')
 
             self.log(f'train sents: {self.args.num_train_sents}')
@@ -184,7 +175,7 @@ class Realization(object):
         best_score = -1
         step = 0
 
-        for batch in self.iterate_batch:
+        for batch in iterate_batch(self.train_sents, self.extra_sents, self.args.eval_every, self.args.extra_ratio):
             # train on a batch of sentences
             t0 = time()
             for sent in tqdm(batch):
@@ -297,7 +288,7 @@ class Realization(object):
             waited = 0
             step = 0
 
-            for batch in self.iterate_batch:
+            for batch in iterate_batch(self.train_sents, self.extra_sents, self.args.eval_every, self.args.extra_ratio):
                 loss = total = correct = 0
 
                 if switch_trainer:
@@ -398,7 +389,7 @@ if __name__ == '__main__':
     parser.add_argument("mode", choices=['train', 'pred'])
     parser.add_argument("-m", "--model_file")
     parser.add_argument("-t", "--train_file")
-    # parser.add_argument("-e", "--extra_file")
+    parser.add_argument("-e", "--extra_file")
     parser.add_argument("-d", "--dev_file")
     parser.add_argument("-i", "--input_file")
     parser.add_argument("-p", "--pred_file")
@@ -431,7 +422,7 @@ if __name__ == '__main__':
     parser.add_argument("--no_lin_constraint", action='store_true')
     parser.add_argument("--sent_tsp", action='store_true')
     parser.add_argument("--max_vocab", type=int, default=50000)
-    # parser.add_argument("--extra_ratio", type=int, default=1)
+    parser.add_argument("--extra_ratio", type=int, default=1)
     parser.add_argument("--first_train", type=int, default=1000000)
     parser.add_argument("--first_extra", type=int, default=1000000)
     parser.add_argument("--ud_train", action='store_true')
