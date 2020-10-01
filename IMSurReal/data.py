@@ -391,30 +391,35 @@ def write_nbest(filename, sents, key='lemma'):
             out.write(line)
 
 
-# def iterate_batch(sents, size):
-#     endless_sents = cycle(sents)
-#     batch = []
-#     while True:
-#         for _ in range(size):
-#             batch.append(next(endless_sents))
-#         random.shuffle(batch)
-#         yield batch
-#         batch = []
-
 def iterate_batch(train_sents, extra_sents, size, ratio):
-    tg = iterate(train_sents)
-    eg = iterate(extra_sents)
-    
+    endless_train_sents = cycle(train_sents)
+    if extra_sents:
+        endless_extra_sents = cycle(extra_sents)
     batch = []
     while True:
         for i in range(size):
-            if i % (ratio + 1) == 0 or not extra_sents:
-                batch.append(next(tg))
+            if not extra_sents or i % (ratio + 1) == 0:
+                batch.append(next(endless_train_sents))
             else:
-                batch.append(next(eg))
+                batch.append(next(endless_extra_sents))
         random.shuffle(batch)
         yield batch
         batch = []
+
+# def iterate_batch(train_sents, extra_sents, size, ratio):
+#     tg = iterate(train_sents)
+#     eg = iterate(extra_sents)
+    
+#     batch = []
+#     while True:
+#         for i in range(size):
+#             if i % (ratio + 1) == 0 or not extra_sents:
+#                 batch.append(next(tg))
+#             else:
+#                 batch.append(next(eg))
+#         random.shuffle(batch)
+#         yield batch
+#         batch = []
 
 
 def iterate(sents):

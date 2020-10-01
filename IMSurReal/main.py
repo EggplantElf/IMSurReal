@@ -21,6 +21,7 @@ from modules.swap_decoder import SwapDecoder
 from modules.lin_decoder import LinDecoder
 from modules.gen_decoder import GenDecoder
 from tqdm import tqdm
+from itertools import chain
 
 class Realization(object):
     def __init__(self, args):
@@ -38,10 +39,23 @@ class Realization(object):
 
             skip_lost = ('inf' not in  self.args.tasks and 'con' not in self.args.tasks)
 
+            # generator for simplified training data, only for extracting maps
+            self.simple_train_sents = read_conllu(self.args.train_file, False, skip_lost, self.args.orig_word, 
+                                            self.args.lemmatize, True, self.args.first_train)
+            self.simple_extra_sents = read_conllu(self.args.extra_file, False, skip_lost, self.args.orig_word, 
+                                            self.args.lemmatize, True, self.args.first_extra)
             # generator for real training data
-            self.train_sents = list(read_conllu(self.args.train_file, False, skip_lost, self.args.orig_word, self.args.lemmatize, False, self.args.first_train))
-            self.extra_sents = list(read_conllu(self.args.extra_file, False, skip_lost, self.args.orig_word, self.args.lemmatize, False, self.args.first_extra)) \
-                                    if self.args.extra_file else []
+            self.train_sents = read_conllu(self.args.train_file, False, skip_lost, self.args.orig_word, 
+                                            self.args.lemmatize, False, self.args.first_train)
+            self.extra_sents = read_conllu(self.args.extra_file, False, skip_lost, self.args.orig_word, \
+                                        self.args.lemmatize, False, self.args.first_extra) if self.args.extra_file else None
+
+            self.iterate_batch = iterate_batch(self.train_sents, self.extra_sents,  self.args.eval_every, self.args.extra_ratio)
+
+
+            # To save memory, do not keep all the training senteces, but iterate through them
+            # First, fast iterate through training sentences to extract the features
+            # Later iterate again for training
 
             self.dev_sents = list(read_conllu(self.args.dev_file, self.args.ud_dev, skip_lost, self.args.orig_word, self.args.lemmatize))
             self.test_sents = list(read_conllu(self.args.input_file, self.args.ud_test, skip_lost, self.args.orig_word, self.args.lemmatize)) if self.args.input_file else []
@@ -49,7 +63,8 @@ class Realization(object):
             # initialize feat_encoder here, because we need look up features in the data
             # iterate through the training data once
             t0 = time()
-            self.encoders['feat'] = FeatEncoder(self.args, self.model, self.train_sents+self.extra_sents)
+            self.encoders['feat'] = FeatEncoder(self.args, self.model, chain(self.simple_train_sents, self.simple_extra_sents) \
+                                                                        if self.args.extra_file else self.simple_train_sents)
             self.log(f'Time used for creating map: {(time()-t0):.1f}s')
 
             self.log(f'train sents: {self.args.num_train_sents}')
@@ -175,7 +190,7 @@ class Realization(object):
         best_score = -1
         step = 0
 
-        for batch in iterate_batch(self.train_sents, self.extra_sents, self.args.eval_every, self.args.extra_ratio):
+        for batch in self.iterate_batch:
             # train on a batch of sentences
             t0 = time()
             for sent in tqdm(batch):
@@ -288,7 +303,7 @@ class Realization(object):
             waited = 0
             step = 0
 
-            for batch in iterate_batch(self.train_sents, self.extra_sents, self.args.eval_every, self.args.extra_ratio):
+            for batch in self.iterate_batch:
                 loss = total = correct = 0
 
                 if switch_trainer:
