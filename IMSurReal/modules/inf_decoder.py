@@ -38,7 +38,7 @@ class InfDecoder(Decoder):
         self.c2i = c2i
         self.emb = emb
         self.i2e = ['<=>', '</$>', '✓', '✗'] + [c for c in c2i.keys()]
-        assert len(self.i2e) == len(set(self.i2e))
+#        assert len(self.i2e) == len(set(self.i2e))
         self.e2i = {e: i for i, e in enumerate(self.i2e)}
         self.max_len = 100
 
