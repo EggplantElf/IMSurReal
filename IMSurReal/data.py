@@ -244,95 +244,102 @@ def normalize(word):
 
 
 # default read non-ud format as input, which means lemma and word are swapped 
-def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, convert_lemma=False, simple=False, first=None):
+def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, convert_lemma=False, simple=False, endless=False, first=None):
     count = 0
     sent = Sentence()
-    for line in lzma.open(filename, "rt", encoding='utf-8') if filename.endswith('xz') else open(filename):
-    # for line in open(filename):
-        if line.strip():
-            if line.startswith('#'):
-                sent.meta += line
-                if line.startswith('# text = '):
-                    sent.text = line.strip().split('# text = ')[1]
-            else:
-                entries = line.strip().split('\t')
-                if '-' in entries[0]:
-                    sent['gold_contracted_lines'][int(entries[0].split('-')[0])] = line
-                elif '.' in entries[0]:
-                    pass
+    with (lzma.open(filename, "rt", encoding='utf-8') if filename.endswith('xz') else open(filename)) as fin:
+        while True:
+            line = fin.readline()
+            if line == '': # end of file
+                # endless mode
+                if endless:
+                    fin.seek(0)
                 else:
-                    # separate morphological information from task related information
-                    lin = None          # used in both T1 and T2 to indicate the relative position to its head, 
-                                        # appear in train and dev, positive means after the head
-                    original_id = int(entries[0])
-                    ids = []            # used in T2 to indicate all corresponding tokens (head and deleted children) in T1,
-                                        # only in train set
-
-                    oword = entries[1] if (ud or entries[2] == '_') else entries[2]
-                    olemma = entries[2] if (ud and entries[2] != '_') else entries[1]
-                    # might be a bug in the alignment cause empty cword instead of '_'
-                    cword = oword.lower() if (ud or entries[8] == '_' or entries[8] == ' ') else entries[8] 
-                    morphstr = entries[5]
-                    morph = []
-                    if morphstr != '_':
-                        for items in morphstr.split('|'):
-                            k, v = items.split('=')
-                            if k == 'original_id':
-                                original_id = int(v)
-                            elif k == 'lin':
-                                lin = int(v)
-                            elif k.startswith('id'):
-                                ids.append(int(v))
-                            else:
-                                # real morphological information
-                                # morph_dict[k] = v
-                                morph.append(items) # key-value pair as a string
-
-                    # VERY IMPORTANT !!! (A BUG IN THE DATA)
-                    morph.sort()
-
-                    token = Token({'tid': int(entries[0]),
-                                  'oword': oword, 
-                                  'word': normalize(oword) if orig_word else oword.lower(),
-                                  'cword': cword,
-                                  'olemma': olemma,
-                                  'lemma': olemma.lower(),
-                                  'clemma': olemma.lower(), # for inflection, normally the same as lemma, only different in korean
-                                  'upos': entries[3],
-                                  'xpos': entries[4],
-                                  'morph': morph,
-                                  'morphstr': '|'.join(morph) if morph else '_',
-                                  'omorphstr': entries[5],
-                                  'hid': int(entries[6]),
-                                  'label': entries[7],
-                                  'lin' : lin,
-                                  'original_id': original_id,
-                                  'ids': ids,
-                                  'deps': [],
-                                  'lost': [],
-                                  'domain': [],
-                                  'linearized_domain': [], # T1 prediction
-                                  'generated_domain': [], # T2 prediction
-                                  'gold_linearized_domain': [],
-                                  'phead': None, # for parser prediction
-                                  'phid': None # for parser prediction
-                                   })
-                    if convert_lemma:
-                        token.convert_lemma_morph()
-                    token.get_diff()
-                    if token['label'] == '<LOST>' and skip_lost:
-                        sent.lost.append(token)
-                    # elif token['lemma'] != '_': # ignore empty nodes
+                    break
+            elif line.strip():
+                if line.startswith('#'):
+                    sent.meta += line
+                    if line.startswith('# text = '):
+                        sent.text = line.strip().split('# text = ')[1]
+                else:
+                    entries = line.strip().split('\t')
+                    if '-' in entries[0]:
+                        sent['gold_contracted_lines'][int(entries[0].split('-')[0])] = line
+                    elif '.' in entries[0]:
+                        pass
                     else:
-                        sent.add_token(token)
-        elif len(sent.tokens) > 1:
-            if not simple:
-                sent.complete()
-            count += 1
-            yield sent
-            sent = Sentence()
-            if first and count >= first:
-                break
+                        # separate morphological information from task related information
+                        lin = None          # used in both T1 and T2 to indicate the relative position to its head, 
+                                            # appear in train and dev, positive means after the head
+                        original_id = int(entries[0])
+                        ids = []            # used in T2 to indicate all corresponding tokens (head and deleted children) in T1,
+                                            # only in train set
+
+                        oword = entries[1] if (ud or entries[2] == '_') else entries[2]
+                        olemma = entries[2] if (ud and entries[2] != '_') else entries[1]
+                        # might be a bug in the alignment cause empty cword instead of '_'
+                        cword = oword.lower() if (ud or entries[8] == '_' or entries[8] == ' ') else entries[8] 
+                        morphstr = entries[5]
+                        morph = []
+                        if morphstr != '_':
+                            for items in morphstr.split('|'):
+                                k, v = items.split('=')
+                                if k == 'original_id':
+                                    original_id = int(v)
+                                elif k == 'lin':
+                                    lin = int(v)
+                                elif k.startswith('id'):
+                                    ids.append(int(v))
+                                else:
+                                    # real morphological information
+                                    # morph_dict[k] = v
+                                    morph.append(items) # key-value pair as a string
+
+                        # VERY IMPORTANT !!! (A BUG IN THE DATA)
+                        morph.sort()
+
+                        token = Token({'tid': int(entries[0]),
+                                    'oword': oword, 
+                                    'word': normalize(oword) if orig_word else oword.lower(),
+                                    'cword': cword,
+                                    'olemma': olemma,
+                                    'lemma': olemma.lower(),
+                                    'clemma': olemma.lower(), # for inflection, normally the same as lemma, only different in korean
+                                    'upos': entries[3],
+                                    'xpos': entries[4],
+                                    'morph': morph,
+                                    'morphstr': '|'.join(morph) if morph else '_',
+                                    'omorphstr': entries[5],
+                                    'hid': int(entries[6]),
+                                    'label': entries[7],
+                                    'lin' : lin,
+                                    'original_id': original_id,
+                                    'ids': ids,
+                                    'deps': [],
+                                    'lost': [],
+                                    'domain': [],
+                                    'linearized_domain': [], # T1 prediction
+                                    'generated_domain': [], # T2 prediction
+                                    'gold_linearized_domain': [],
+                                    'phead': None, # for parser prediction
+                                    'phid': None # for parser prediction
+                                    })
+                        if convert_lemma:
+                            token.convert_lemma_morph()
+                        token.get_diff()
+                        if token['label'] == '<LOST>' and skip_lost:
+                            sent.lost.append(token)
+                        # elif token['lemma'] != '_': # ignore empty nodes
+                        else:
+                            sent.add_token(token)
+            elif len(sent.tokens) > 1:
+                if not simple:
+                    sent.complete()
+                count += 1
+                yield sent
+                sent = Sentence()
+                if first and count >= first:
+                    break
 
 # default write ud format as output
 def write_conllu(filename, sents, ud=True, use_morphstr=False, header=True):
@@ -392,16 +399,13 @@ def write_nbest(filename, sents, key='lemma'):
 
 
 def iterate_batch(train_sents, extra_sents, size, ratio):
-    endless_train_sents = cycle(train_sents)
-    if extra_sents:
-        endless_extra_sents = cycle(extra_sents)
     batch = []
     while True:
         for i in range(size):
             if not extra_sents or i % (ratio + 1) == 0:
-                batch.append(next(endless_train_sents))
+                batch.append(next(train_sents))
             else:
-                batch.append(next(endless_extra_sents))
+                batch.append(next(extra_sents))
         random.shuffle(batch)
         yield batch
         batch = []

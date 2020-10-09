@@ -22,6 +22,7 @@ from modules.lin_decoder import LinDecoder
 from modules.gen_decoder import GenDecoder
 from tqdm import tqdm
 from itertools import chain
+# import objgraph
 
 class Realization(object):
     def __init__(self, args):
@@ -41,14 +42,14 @@ class Realization(object):
 
             # generator for simplified training data, only for extracting maps
             self.simple_train_sents = read_conllu(self.args.train_file, False, skip_lost, self.args.orig_word, 
-                                            self.args.lemmatize, True, self.args.first_train)
+                                            self.args.lemmatize, True, False, self.args.first_train)
             self.simple_extra_sents = read_conllu(self.args.extra_file, False, skip_lost, self.args.orig_word, 
-                                            self.args.lemmatize, True, self.args.first_extra)
+                                            self.args.lemmatize, True, False, self.args.first_extra)
             # generator for real training data
             self.train_sents = read_conllu(self.args.train_file, False, skip_lost, self.args.orig_word, 
-                                            self.args.lemmatize, False, self.args.first_train)
+                                            self.args.lemmatize, False, True, self.args.first_train)
             self.extra_sents = read_conllu(self.args.extra_file, False, skip_lost, self.args.orig_word, \
-                                        self.args.lemmatize, False, self.args.first_extra) if self.args.extra_file else None
+                                        self.args.lemmatize, False, True, self.args.first_extra) if self.args.extra_file else None
 
             self.iterate_batch = iterate_batch(self.train_sents, self.extra_sents,  self.args.eval_every, self.args.extra_ratio)
 
