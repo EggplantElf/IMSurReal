@@ -21,7 +21,6 @@ def read_conllu(filename):
 def ensemble(output_file, *input_files):
     all_data = [read_conllu(input_file) for input_file in input_files]
 
-    agreements = []
     with open(output_file, 'w') as out:
         for hyps in zip(*all_data):
             counts = defaultdict(int)
@@ -30,11 +29,9 @@ def ensemble(output_file, *input_files):
                 sent2text[sent] = text
                 counts[sent] += 1
             best_sent = max(counts.items(), key=lambda x:x[1])[0]
-            agreements.append(counts[best_sent])
             best_text = sent2text[best_sent]
             out.write(best_text + '\n')
 
-    print(f'Agreement = {sum(agreements) / len(agreements):.4f}')
 
 if __name__ == '__main__':
     ensemble(sys.argv[1], *sys.argv[2:])
