@@ -49,7 +49,7 @@ class Realization(object):
             self.train_sents = read_conllu(self.args.train_file, False, skip_lost, self.args.orig_word, 
                                             self.args.lemmatize, False, True, self.args.first_train)
             self.extra_sents = read_conllu(self.args.extra_file, False, skip_lost, self.args.orig_word, \
-                                        self.args.lemmatize, False, True, self.args.first_extra) if self.args.extra_file else None
+                                            self.args.lemmatize, False, True, self.args.first_extra) if self.args.extra_file else None
 
             self.iterate_batch = iterate_batch(self.train_sents, self.extra_sents,  self.args.eval_every, self.args.extra_ratio)
 
@@ -124,7 +124,7 @@ class Realization(object):
 
         print(f'tasks = {self.args.tasks}')
         print(f'train_file = {self.args.train_file}')
-        # print(f'extra_file = {self.args.extra_file}')
+        print(f'extra_file = {self.args.extra_file}')
         print(f'dev_file = {self.args.dev_file}')
         print(f'input_file = {self.args.input_file}')
         print(f'pred_file = {self.args.pred_file}')

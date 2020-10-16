@@ -250,10 +250,12 @@ def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, convert_lem
     with (lzma.open(filename, "rt", encoding='utf-8') if filename.endswith('xz') else open(filename)) as fin:
         while True:
             line = fin.readline()
-            if line == '': # end of file
+            if line == '' or (first and count >= first): # end of file or reach maximum sentence count
                 # endless mode
                 if endless:
+                    print('seek')
                     fin.seek(0)
+                    count = 0
                 else:
                     break
             elif line.strip():
@@ -338,8 +340,7 @@ def read_conllu(filename, ud=False, skip_lost=True, orig_word=False, convert_lem
                 count += 1
                 yield sent
                 sent = Sentence()
-                if first and count >= first:
-                    break
+
 
 # default write ud format as output
 def write_conllu(filename, sents, ud=True, use_morphstr=False, header=True):
